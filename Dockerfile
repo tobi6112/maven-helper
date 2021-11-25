@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM maven:3-eclipse-temurin-17
 
 COPY LICENSE README.md /
 
