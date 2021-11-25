@@ -1,0 +1,48 @@
+name: 'build-test'
+on: # rebuild any PRs and main branch changes
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build: # make sure build/ci work properly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          docker build .
+  test: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: maven-helper
+        with:
+          pom: ./__tests__/fixtures/pom.xml
+      - name: Verify output
+        run: |
+          expectedGroupId="com.github.tobi6112"
+          actualGroupId="${{ steps.maven-helper.output.groupId }}"
+
+          if [ "$expectedGroupId" != "$actualGroupId" ]; then
+            echo "Failed to verify GroupId, expected. ${expectedGroupId} actual: ${actualGroupId}"
+            exit 1
+          fi
+
+          expectedArtifactId="maven-helper-test-fixture"
+          actualArtifactId="${{ steps.maven-helper.output.artifactId }}"
+
+          if [ "$expectedArtifactId" != "$actualArtifactId" ]; then
+            echo "Failed to verify ArtifactId, expected. ${expectedArtifactId} actual: ${actualArtifactId}"
+            exit 1
+          fi
+
+          expectedVersion="0.1.0-SNAPSHOT"
+          actualVersion="${{ steps.maven-helper.output.version }}"
+
+          if [ "$expectedVersion" != "$actualVersion" ]; then
+            echo "Failed to verify Version, expected. ${expectedVersion} actual: ${actualVersion}"
+            exit 1
+          fi
+
